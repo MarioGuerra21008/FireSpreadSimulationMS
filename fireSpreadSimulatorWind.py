@@ -4,10 +4,10 @@ import matplotlib.animation as animation
 
 # Parámetros de la simulación
 grid_size = 50            # Tamaño de la cuadrícula
-base_prob_spread = 1.5    # Probabilidad base de propagación del fuego
+base_prob_spread = 1.0    # Probabilidad base de propagación del fuego
 iterations = 50           # Número de iteraciones
-wind_direction = (0, 0.1)   # Dirección del viento
-wind_influence = 0.05      # Influencia del viento en la probabilidad de propagación
+wind_direction = (0.05, 0.2)   # Dirección del viento
+wind_influence = 10.0      # Influencia del viento en la probabilidad de propagación
 
 # Estados de la celda
 EMPTY = 0                 # Verde (sin quemar)
@@ -18,8 +18,8 @@ BURNED = 2                # Quemado
 def initialize_grid(size):
     grid = np.zeros((size, size), dtype=int)
     vegetation = np.random.rand(size, size)  # Densidad de vegetación (0-1)
-    center = size // 2
-    grid[center, center] = BURNING  # Inicia el fuego en el centro
+    start_x, start_y = np.random.randint(0, size), np.random.randint(0, size)
+    grid[start_x, start_y] = BURNING
     return grid, vegetation
 
 # Calcular la probabilidad de propagación ajustada para cada celda

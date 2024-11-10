@@ -15,8 +15,8 @@ BURNED = 2              # Quemado
 # Inicialización de la cuadrícula
 def initialize_grid(size):
     grid = np.zeros((size, size), dtype=int)
-    center = size // 2
-    grid[center, center] = BURNING  # Inicia el fuego en el centro
+    start_x, start_y = np.random.randint(0, size), np.random.randint(0, size)
+    grid[start_x, start_y] = BURNING
     return grid
 
 # Actualización del estado de la cuadrícula
