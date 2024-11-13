@@ -3,16 +3,16 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 # Parámetros de la simulación
-grid_size = 50            # Tamaño de la cuadrícula
-base_prob_spread = 1.0    # Probabilidad base de propagación del fuego
-iterations = 50           # Número de iteraciones
-wind_direction = (0.05, 0.2)   # Dirección del viento
-wind_influence = 10.0      # Influencia del viento en la probabilidad de propagación
+grid_size = 50             # Tamaño de la cuadrícula
+diffusion_rate = 0.5       # Tasa de difusión del fuego
+iterations = 100            # Número de iteraciones
+wind_direction = (0.2, 0.5)    # Dirección del viento
+wind_influence = 0.05      # Influencia del viento en la difusión
 
 # Estados de la celda
-EMPTY = 0                 # Verde (sin quemar)
-BURNING = 1               # En llamas
-BURNED = 2                # Quemado
+EMPTY = 0                  # Verde (sin quemar)
+BURNING = 1                # En llamas
+BURNED = 2                 # Quemado
 
 # Inicialización de la cuadrícula y vegetación
 def initialize_grid(size):
@@ -22,29 +22,22 @@ def initialize_grid(size):
     grid[start_x, start_y] = BURNING
     return grid, vegetation
 
-# Calcular la probabilidad de propagación ajustada para cada celda
-def calculate_spread_prob(vegetation_density, wind_direction, cell_position):
-    prob = base_prob_spread * vegetation_density
-    # Ajuste por viento si la celda está en la dirección del viento
-    if (cell_position[0] - wind_direction[0], cell_position[1] - wind_direction[1]) == wind_direction:
-        prob += wind_influence
-    return min(1.0, prob)  # Limitar probabilidad a un máximo de 1
-
-# Actualización del estado de la cuadrícula
-def update_grid(grid, vegetation, wind_direction):
+# Actualización del estado de la cuadrícula basado en difusión
+def update_grid_diffusion(grid, diffusion_rate, wind_direction, wind_influence):
     new_grid = grid.copy()
     for i in range(1, grid.shape[0] - 1):
         for j in range(1, grid.shape[1] - 1):
             if grid[i, j] == BURNING:
-                # Si una celda está en llamas, se vuelve quemada
-                new_grid[i, j] = BURNED
-                # Propagación del fuego a celdas vecinas
+                new_grid[i, j] = BURNED  # La celda se quema
                 for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                     ni, nj = i + dx, j + dy
                     if grid[ni, nj] == EMPTY:
-                        # Calcular la probabilidad de propagación en base a vegetación y viento
-                        spread_prob = calculate_spread_prob(vegetation[ni, nj], wind_direction, (dx, dy))
-                        if np.random.rand() < spread_prob:
+                        # Calcular probabilidad de difusión ajustada por viento
+                        diffusion_prob = diffusion_rate
+                        if (dx, dy) == wind_direction:
+                            diffusion_prob += wind_influence
+                        # Propagar el fuego basado en la tasa de difusión
+                        if np.random.rand() < diffusion_prob:
                             new_grid[ni, nj] = BURNING
     return new_grid
 
@@ -64,7 +57,7 @@ def animate(frame):
     ax.clear()
     ax.set_title(f"Iteración {frame+1}")
     plot_grid(grid)
-    grid = update_grid(grid, vegetation, wind_direction)
+    grid = update_grid_diffusion(grid, diffusion_rate, wind_direction, wind_influence)
 
 ani = animation.FuncAnimation(fig, animate, frames=iterations, repeat=False)
 plt.show()
