@@ -11,6 +11,7 @@ simulations = [
     {"beta": 0.7, "gamma": 0.4, "grid_size": grid_size},
     {"beta": 0.9, "gamma": 0.5, "grid_size": grid_size}
 ]
+num_simulations = 50
 
 # Estados de la celda
 EMPTY = 0               # Verde (sin quemar) (Susceptible)
@@ -63,6 +64,59 @@ def run_simulation(beta, gamma, grid_size, max_iter=iterations):
     extinction_time = i
     
     return empty_counts, burning_counts, burned_counts, spread_rate, extinction_time
+
+# Ejecutar simulaciones múltiples y calcular promedios
+def run_simulations_with_averages(simulations, num_simulations, max_iter=iterations):
+    averaged_metrics = []
+    for sim in simulations:
+        beta, gamma, grid_size = sim["beta"], sim["gamma"], sim["grid_size"]
+        total_empty = np.zeros(max_iter)
+        total_burning = np.zeros(max_iter)
+        total_burned = np.zeros(max_iter)
+
+        for _ in range(num_simulations):
+            empty, burning, burned, _, _ = run_simulation(beta, gamma, grid_size, max_iter)
+            
+            # Ajustar los tamaños de los resultados si la simulación terminó antes de max_iter
+            empty = np.pad(empty, (0, max_iter - len(empty)), 'edge')
+            burning = np.pad(burning, (0, max_iter - len(burning)), 'constant', constant_values=0)
+            burned = np.pad(burned, (0, max_iter - len(burned)), 'edge')
+
+            total_empty += np.array(empty)
+            total_burning += np.array(burning)
+            total_burned += np.array(burned)
+
+        avg_empty = total_empty / num_simulations
+        avg_burning = total_burning / num_simulations
+        avg_burned = total_burned / num_simulations
+
+        averaged_metrics.append({
+            "beta": beta,
+            "gamma": gamma,
+            "avg_empty": avg_empty,
+            "avg_burning": avg_burning,
+            "avg_burned": avg_burned
+        })
+
+    return averaged_metrics
+
+# Ejecutar y graficar resultados
+averaged_metrics = run_simulations_with_averages(simulations, num_simulations=50, max_iter=iterations)
+
+for metrics in averaged_metrics:
+    beta, gamma = metrics["beta"], metrics["gamma"]
+    avg_empty, avg_burning, avg_burned = metrics["avg_empty"], metrics["avg_burning"], metrics["avg_burned"]
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(avg_empty, label="Empty (Verde)")
+    plt.plot(avg_burning, label="Burning (En llamas)")
+    plt.plot(avg_burned, label="Burned (Quemado)")
+    plt.xlabel("Iteración")
+    plt.ylabel("Promedio de cantidad de celdas")
+    plt.title(f"Promedio de evolución de estados - Beta: {beta}, Gamma: {gamma}")
+    plt.legend()
+    plt.savefig(f"{output_dir}/average_evolution_beta_{beta}_gamma_{gamma}.png")
+    plt.show()
 
 # Ejecución de todas las simulaciones con diferentes parámetros
 metrics = []

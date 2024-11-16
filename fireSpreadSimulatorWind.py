@@ -82,3 +82,14 @@ def animate(frame):
 
 ani = animation.FuncAnimation(fig, animate, frames=iterations, repeat=False)
 plt.show()
+
+# Graficar la cantidad de celdas en cada estado a lo largo del tiempo
+plt.figure()
+plt.plot(empty_counts, label="Empty (Verde)")
+plt.plot(burning_counts, label="Burning (En llamas)")
+plt.plot(burned_counts, label="Burned (Quemado)")
+plt.xlabel("Iteración")
+plt.ylabel("Cantidad de celdas")
+plt.title("Evolución de los estados del fuego en la simulación")
+plt.legend()
+plt.show()
